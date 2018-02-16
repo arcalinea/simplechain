@@ -12,6 +12,13 @@ import (
   "os"
 )
 
+type Node struct {
+    NodeID  uint64
+    Mempool
+    Blockchain
+}
+
+
 func main() {
   ctx := context.Background()
 
@@ -71,7 +78,14 @@ func main() {
       if err != nil {
           panic(err)
       }
-      fmt.Println(string(msg.GetData()))
+
+      blk, err := Deserialize(msg.GetData())
+      if err != nil {
+          panic(err)
+      }
+
+      fmt.Println(blk)
+
   }
 
 
