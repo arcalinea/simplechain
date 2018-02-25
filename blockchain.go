@@ -27,6 +27,24 @@ func CreateGenesisBlock() (*Block){
     return genesisBlock
 }
 
-// func (chain* Blockchain) AddBlock(blk *Block){
-//     
-// }
+func (chain *Blockchain) GetChainTip() (*Block){
+    return chain.Head
+}
+
+func (chain *Blockchain) ValidateBlock(blk *Block) bool {
+    chainTip := chain.GetChainTip()
+    if blk.PrevHash != chainTip.GetHash() {
+        return false
+    }
+    return true
+}
+
+// Check that prevHash of new block is equal to hash of chainTip
+// Transactions validate 
+// Height is 1 greater than chainTip
+// Time is greater than time of chainTip
+func (chain *Blockchain) AddBlock(blk *Block){
+    if chain.ValidateBlock(blk) {
+        chain.Head = blk
+    }
+}

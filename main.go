@@ -15,7 +15,7 @@ import (
 type Node struct {
     NodeID  uint64
     // Mempool
-    Blockchain
+    // Blockchain
 }
 
 
@@ -59,7 +59,6 @@ func main() {
   go func(){
       for range time.Tick(time.Second * 5){
           var blk Block
-          blk.PrevHash = "genesis"
           blk.Transactions = []Transaction{
               {Sender: "Jay", Receiver: "Jeromy", Amount: 57, Memo: "Happy Valentine's Day <3"},
           }

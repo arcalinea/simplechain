@@ -6,7 +6,7 @@ import (
 )
 
 type Block struct {
-    PrevHash string
+    PrevHash [32]byte
     Transactions []Transaction
     Height uint64
     Time uint64
