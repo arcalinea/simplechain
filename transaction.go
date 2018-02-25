@@ -11,8 +11,12 @@ type Transaction struct {
     Memo string
 }
 
-func (tx *Transaction) Serialize() ([]byte, error){
-    return json.Marshal(tx)
+func (tx *Transaction) Serialize() ([]byte){
+    data, err := json.Marshal(tx)
+    if err != nil {
+        panic(err)
+    }
+    return data
 }
 
 func DeserializeTx(buf []byte) (*Transaction, error){

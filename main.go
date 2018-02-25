@@ -64,10 +64,7 @@ func main() {
           }
           blk.Height = 1
           blk.Time = 100
-          data, err := blk.Serialize()
-          if err != nil {
-              panic(err)
-          }
+          data := blk.Serialize()
           pubsub.Publish("blocks", data)
       }
   }()

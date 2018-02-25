@@ -14,8 +14,12 @@ type Block struct {
     // Solution string
 }
 
-func (b *Block) Serialize() ([]byte, error){
-    return json.Marshal(b)
+func (b *Block) Serialize() ([]byte){
+    data, err := json.Marshal(b)
+    if err != nil {
+        panic(err)
+    }
+    return data
 }
 
 func DeserializeBlock(buf []byte) (*Block, error){
@@ -28,9 +32,6 @@ func DeserializeBlock(buf []byte) (*Block, error){
 }
 
 func (b *Block) GetHash() ([32]byte){
-    ser, err := b.Serialize() 
-    if err != nil {
-        panic(err)
-    }
+    ser := b.Serialize() 
     return sha256.Sum256(ser)
 }

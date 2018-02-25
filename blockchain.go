@@ -45,6 +45,7 @@ func (chain *Blockchain) ValidateBlock(blk *Block) bool {
 // Time is greater than time of chainTip
 func (chain *Blockchain) AddBlock(blk *Block){
     if chain.ValidateBlock(blk) {
-        chain.Head = blk
+        blkCopy := *blk
+        chain.Head = &blkCopy
     }
 }

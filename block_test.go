@@ -7,7 +7,6 @@ import (
 
 func TestHashBlock(t* testing.T){
     blk := &Block{
-        PrevHash: "cat",
         Transactions: nil,
         Height: 100,
         Time: 42,
