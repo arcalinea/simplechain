@@ -14,7 +14,7 @@ import (
 
 type Node struct {
     NodeID  uint64
-    Mempool
+    // Mempool
     Blockchain
 }
 
@@ -79,7 +79,7 @@ func main() {
           panic(err)
       }
 
-      blk, err := Deserialize(msg.GetData())
+      blk, err := DeserializeBlock(msg.GetData())
       if err != nil {
           panic(err)
       }

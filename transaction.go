@@ -1,5 +1,8 @@
 package main
 
+import (
+    "encoding/json"
+)
 
 type Transaction struct {
     Sender string
@@ -12,7 +15,7 @@ func (tx *Transaction) Serialize() ([]byte, error){
     return json.Marshal(tx)
 }
 
-func Deserialize(buf []byte) (*Transaction, error){
+func DeserializeTx(buf []byte) (*Transaction, error){
     var tx Transaction
     err := json.Unmarshal(buf, &tx)
     if err != nil {
