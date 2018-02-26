@@ -1,89 +1,87 @@
 package main
 
 import (
-  "fmt"
-  "context"
-  "time"
+	"context"
+	"fmt"
+	"time"
 
-  "github.com/libp2p/go-libp2p"
-  ipfsaddr "github.com/ipfs/go-ipfs-addr"
-  peerstore "github.com/libp2p/go-libp2p-peerstore"
-  floodsub "github.com/libp2p/go-floodsub"
-  "os"
+	"gx/ipfs/QmNh1kGFFdsPu79KNSaL4NUKUPb4Eiz4KHdMtFY6664RDp/go-libp2p"
+	ipfsaddr "gx/ipfs/QmQViVWBHbU6HmYjXcdNq7tVASCNgdg64ZGcauuDkLCivW/go-ipfs-addr"
+	floodsub "gx/ipfs/QmSFihvoND3eDaAYRCeLgLPt62yCPgMZs1NSZmKFEtJQQw/go-libp2p-floodsub"
+	peerstore "gx/ipfs/QmXauCuJzmzapetmC6W4TuDJLL1yFFrVzSHoWv8YdbmnxH/go-libp2p-peerstore"
+	"os"
 )
 
 type Node struct {
-    NodeID  uint64
-    // Mempool
-    // Blockchain
+	NodeID uint64
+	// Mempool
+	// Blockchain
 }
 
-
 func main() {
-  ctx := context.Background()
+	ctx := context.Background()
 
-  node, err := libp2p.New(ctx, libp2p.Defaults)
-  if err != nil {
-      panic(err)
-  }
+	node, err := libp2p.New(ctx, libp2p.Defaults)
+	if err != nil {
+		panic(err)
+	}
 
-  pubsub, err := floodsub.NewFloodSub(ctx, node)
-  if err != nil {
-      panic(err)
-  }
+	pubsub, err := floodsub.NewFloodSub(ctx, node)
+	if err != nil {
+		panic(err)
+	}
 
-  for i, addr := range node.Addrs() {
-    fmt.Printf("%d: %s/ipfs/%s\n", i, addr, node.ID().Pretty())
-  }
+	for i, addr := range node.Addrs() {
+		fmt.Printf("%d: %s/ipfs/%s\n", i, addr, node.ID().Pretty())
+	}
 
-  if len(os.Args) > 1 {
-      addrstr := os.Args[1]
-      addr, err := ipfsaddr.ParseString(addrstr)
-      if err != nil {
-          panic(err)
-      }
-      fmt.Println("Parse Address:", addr)
+	if len(os.Args) > 1 {
+		addrstr := os.Args[1]
+		addr, err := ipfsaddr.ParseString(addrstr)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("Parse Address:", addr)
 
-      pinfo, _ := peerstore.InfoFromP2pAddr(addr.Multiaddr())
+		pinfo, _ := peerstore.InfoFromP2pAddr(addr.Multiaddr())
 
-      if err := node.Connect(ctx, *pinfo); err != nil {
-          fmt.Println("bootstrapping a peer failed", err)
-      }
-  }
+		if err := node.Connect(ctx, *pinfo); err != nil {
+			fmt.Println("bootstrapping a peer failed", err)
+		}
+	}
 
-  sub, err := pubsub.Subscribe("blocks")
-  if err != nil {
-      panic(err)
-  }
+	sub, err := pubsub.Subscribe("blocks")
+	if err != nil {
+		panic(err)
+	}
 
-  go func(){
-      for range time.Tick(time.Second * 5){
-          var blk Block
-          blk.Transactions = []Transaction{
-              {Sender: "Jay", Receiver: "Jeromy", Amount: 57, Memo: "Happy Valentine's Day <3"},
-          }
-          blk.Height = 1
-          blk.Time = 100
-          data := blk.Serialize()
-          pubsub.Publish("blocks", data)
-      }
-  }()
+	go func() {
+		for range time.Tick(time.Second * 5) {
+			var blk Block
+			blk.Transactions = []Transaction{
+				{Sender: "Jay", Receiver: "Jeromy", Amount: 57, Memo: "Happy Valentine's Day <3"},
+			}
+			blk.Height = 1
+			blk.Time = 100
+			data := blk.Serialize()
+			pubsub.Publish("blocks", data)
+		}
+	}()
 
-  for {
-      msg, err := sub.Next(ctx)
-      if err != nil {
-          panic(err)
-      }
+	for {
+		msg, err := sub.Next(ctx)
+		if err != nil {
+			panic(err)
+		}
 
-      blk, err := DeserializeBlock(msg.GetData())
-      if err != nil {
-          panic(err)
-      }
+		blk, err := DeserializeBlock(msg.GetData())
+		if err != nil {
+			panic(err)
+		}
 
-      fmt.Println(blk)
+		fmt.Println(blk)
 
-  }
+	}
 
-
-  select{}
+	select {}
 }
