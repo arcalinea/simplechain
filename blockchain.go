@@ -105,18 +105,32 @@ func (chain *Blockchain) GetChainTip() *Block {
 	return chain.Head
 }
 
-func (chain *Blockchain) ValidateBlock(blk *Block) bool {
-	chainTip := chain.GetChainTip()
-	if blk.PrevHash != chainTip.GetHash() {
-		return false
-	}
-	return true
+func validateTransactions(txs []Transaction) bool {
+    // TODO: Tx validation logic goes here
+    return true
 }
 
 // Check that prevHash of new block is equal to hash of chainTip
 // Transactions validate
 // Height is 1 greater than chainTip
 // Time is greater than time of chainTip
+func (chain *Blockchain) ValidateBlock(blk *Block) bool {
+	chainTip := chain.GetChainTip()
+	if blk.PrevHash != chainTip.GetHash() {
+		return false
+	}
+    if !validateTransactions(blk.Transactions){
+        return false
+    }
+    if blk.Height != chainTip.Height + 1 {
+        return false
+    }
+    if blk.Time < chainTip.Time {
+        return false
+    }
+	return true
+}
+
 func (chain *Blockchain) AddBlock(blk *Block) {
 	if chain.ValidateBlock(blk) {
 		blkCopy := *blk
