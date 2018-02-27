@@ -18,6 +18,13 @@ import (
 	host "gx/ipfs/QmNmJZL7FQySMtE2BQuLMuZg2EB2CLEunJJUSVSc9YnnbV/go-libp2p-host"
 )
 
+type Blockchain struct {
+	Head         *Block
+	ChainDB      bserv.BlockService
+	GenesisBlock *Block
+	Blockstore   bstore.Blockstore
+}
+
 func init() {
 	cbor.RegisterCborType(Block{})
 	cbor.RegisterCborType(Transaction{})
@@ -86,12 +93,8 @@ func PutBlock(bs bserv.BlockService, blk *Block) (*cid.Cid, error) {
 	return nd.Cid(), nil
 }
 
-type Blockchain struct {
-	Head         *Block
-	ChainDB      bserv.BlockService
-	GenesisBlock *Block
-	Blockstore   bstore.Blockstore
-}
+
+//////
 
 func CreateGenesisBlock() *Block {
 	genesisBlock := &Block{
