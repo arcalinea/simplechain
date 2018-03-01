@@ -102,13 +102,12 @@ func (node *Node) ListenTransactions(ctx context.Context){
             if err != nil {
                 panic(err)
             }
-            
             tx, err := DeserializeTx(msg.GetData())
             if err != nil {
                 panic(err)
             }
-            
-            fmt.Println(tx)
+            node.mempool.AddTx(tx)
+            fmt.Println("Tx received over network, added to mempool:", tx)
         }
     }()
 }
