@@ -2,86 +2,22 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"time"
-
-	"gx/ipfs/QmNh1kGFFdsPu79KNSaL4NUKUPb4Eiz4KHdMtFY6664RDp/go-libp2p"
-	ipfsaddr "gx/ipfs/QmQViVWBHbU6HmYjXcdNq7tVASCNgdg64ZGcauuDkLCivW/go-ipfs-addr"
-	floodsub "gx/ipfs/QmSFihvoND3eDaAYRCeLgLPt62yCPgMZs1NSZmKFEtJQQw/go-libp2p-floodsub"
-	peerstore "gx/ipfs/QmXauCuJzmzapetmC6W4TuDJLL1yFFrVzSHoWv8YdbmnxH/go-libp2p-peerstore"
-	"os"
 )
-
-type Node struct {
-	NodeID uint64
-	// Mempool
-	// Blockchain
-}
 
 func main() {
 	ctx := context.Background()
-
-	node, err := libp2p.New(ctx, libp2p.Defaults)
-	if err != nil {
-		panic(err)
+	
+	node := CreateNewNode(ctx)
+	
+	var blk Block
+	blk.Transactions = []Transaction{
+		{Sender: "arc", Receiver: "why", Amount: 57, Memo: "test"},
 	}
+	blk.Height = 1
+	blk.Time = 100
+	
+	node.BroadcastBlock(&blk)
 
-	pubsub, err := floodsub.NewFloodSub(ctx, node)
-	if err != nil {
-		panic(err)
-	}
-
-	for i, addr := range node.Addrs() {
-		fmt.Printf("%d: %s/ipfs/%s\n", i, addr, node.ID().Pretty())
-	}
-
-	if len(os.Args) > 1 {
-		addrstr := os.Args[1]
-		addr, err := ipfsaddr.ParseString(addrstr)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println("Parse Address:", addr)
-
-		pinfo, _ := peerstore.InfoFromP2pAddr(addr.Multiaddr())
-
-		if err := node.Connect(ctx, *pinfo); err != nil {
-			fmt.Println("bootstrapping a peer failed", err)
-		}
-	}
-
-	sub, err := pubsub.Subscribe("blocks")
-	if err != nil {
-		panic(err)
-	}
-
-	go func() {
-		for range time.Tick(time.Second * 5) {
-			var blk Block
-			blk.Transactions = []Transaction{
-				{Sender: "Jay", Receiver: "Jeromy", Amount: 57, Memo: "Happy Valentine's Day <3"},
-			}
-			blk.Height = 1
-			blk.Time = 100
-			data := blk.Serialize()
-			pubsub.Publish("blocks", data)
-		}
-	}()
-
-	for {
-		msg, err := sub.Next(ctx)
-		if err != nil {
-			panic(err)
-		}
-
-		blk, err := DeserializeBlock(msg.GetData())
-		if err != nil {
-			panic(err)
-		}
-
-		fmt.Println(blk)
-
-	}
 
 	select {}
 }

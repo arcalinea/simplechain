@@ -1,11 +1,91 @@
 package main
 
+import (
+    "context"
+    "fmt"
+    
+    libp2p "gx/ipfs/QmNh1kGFFdsPu79KNSaL4NUKUPb4Eiz4KHdMtFY6664RDp/go-libp2p"
+    host "gx/ipfs/QmNmJZL7FQySMtE2BQuLMuZg2EB2CLEunJJUSVSc9YnnbV/go-libp2p-host"
+    ipfsaddr "gx/ipfs/QmQViVWBHbU6HmYjXcdNq7tVASCNgdg64ZGcauuDkLCivW/go-ipfs-addr"
+    floodsub "gx/ipfs/QmSFihvoND3eDaAYRCeLgLPt62yCPgMZs1NSZmKFEtJQQw/go-libp2p-floodsub"
+    peerstore "gx/ipfs/QmXauCuJzmzapetmC6W4TuDJLL1yFFrVzSHoWv8YdbmnxH/go-libp2p-peerstore"
+    "os"
+)
+
 type Node struct {
-	NodeID uint64
+	p2pNode host.Host
 	mempool *Mempool
 	blockchain *Blockchain
+    pubsub *floodsub.PubSub
 }
 
-func (node *Node) SendTransaction(tx *Transaction) string {
+func CreateNewNode(ctx context.Context) (*Node){
+    var node Node
+
+	newNode, err := libp2p.New(ctx, libp2p.Defaults)
+	if err != nil {
+		panic(err)
+	}
+
+	pubsub, err := floodsub.NewFloodSub(ctx, newNode)
+	if err != nil {
+		panic(err)
+	}
+
+	for i, addr := range newNode.Addrs() {
+		fmt.Printf("%d: %s/ipfs/%s\n", i, addr, newNode.ID().Pretty())
+	}
+    
+    if len(os.Args) > 1 {
+        addrstr := os.Args[1]
+        addr, err := ipfsaddr.ParseString(addrstr)
+        if err != nil {
+            panic(err)
+        }
+        fmt.Println("Parse Address:", addr)
+
+        pinfo, _ := peerstore.InfoFromP2pAddr(addr.Multiaddr())
+
+        if err := newNode.Connect(ctx, *pinfo); err != nil {
+            fmt.Println("bootstrapping a peer failed", err)
+        }
+    }
+
+    sub, err := pubsub.Subscribe("blocks")
+    if err != nil {
+        panic(err)
+    }
+    
+    go func(){
+        for {
+            msg, err := sub.Next(ctx)
+            if err != nil {
+                panic(err)
+            }
+            
+            blk, err := DeserializeBlock(msg.GetData())
+            if err != nil {
+                panic(err)
+            }
+            
+            fmt.Println(blk)
+        }
+    }()
+        
+    node.p2pNode = newNode
+    node.pubsub = pubsub 
+    
+    return &node
     
 }
+
+func (node *Node) BroadcastBlock(block *Block) {
+    data := block.Serialize()
+    node.pubsub.Publish("blocks", data)
+}
+
+
+// func (node *Node) SendTransaction(tx *Transaction) string {
+//     mempool.transactions = append(mempool.transactions, tx)
+//     
+// }
