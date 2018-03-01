@@ -113,6 +113,16 @@ func (node *Node) ListenTransactions(ctx context.Context){
     }()
 }
 
+func (node *Node) CreateNewBlock() *Block {
+    var blk Block
+    blk.PrevHash = node.blockchain.Head.GetHash()
+    blk.Transactions = node.mempool.SelectTransactions()
+    blk.Height = node.blockchain.Head.Height + 1
+    // TODO: Get actual timestamps
+    blk.Time = node.blockchain.Head.Time + 100
+    return &blk
+}
+
 func (node *Node) BroadcastBlock(block *Block) {
     data := block.Serialize()
     node.pubsub.Publish("blocks", data)
