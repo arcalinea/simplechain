@@ -11,7 +11,7 @@ func main() {
 	
 	var blk Block
 	blk.Transactions = []Transaction{
-		{Sender: "arc", Receiver: "why", Amount: 57, Memo: "test"},
+		{Sender: "arc", Receiver: "why", Amount: 33, Memo: "test"},
 	}
 	blk.Height = 1
 	blk.Time = 100

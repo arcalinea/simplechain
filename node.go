@@ -50,8 +50,20 @@ func CreateNewNode(ctx context.Context) (*Node){
             fmt.Println("bootstrapping a peer failed", err)
         }
     }
+        
+    node.p2pNode = newNode
+    node.mempool = &Mempool{}
+    node.pubsub = pubsub 
+    
+    node.ListenBlocks(ctx)
+    node.ListenTransactions(ctx)
+    
+    return &node
+    
+}
 
-    sub, err := pubsub.Subscribe("blocks")
+func (node *Node) ListenBlocks(ctx context.Context){
+    sub, err := node.pubsub.Subscribe("blocks")
     if err != nil {
         panic(err)
     }
@@ -71,12 +83,29 @@ func CreateNewNode(ctx context.Context) (*Node){
             fmt.Println(blk)
         }
     }()
-        
-    node.p2pNode = newNode
-    node.pubsub = pubsub 
+}
+
+func (node *Node) ListenTransactions(ctx context.Context){
+    sub, err := node.pubsub.Subscribe("transactions")
+    if err != nil {
+        panic(err)
+    }
     
-    return &node
-    
+    go func(){
+        for {
+            msg, err := sub.Next(ctx)
+            if err != nil {
+                panic(err)
+            }
+            
+            tx, err := DeserializeTx(msg.GetData())
+            if err != nil {
+                panic(err)
+            }
+            
+            fmt.Println(tx)
+        }
+    }()
 }
 
 func (node *Node) BroadcastBlock(block *Block) {
@@ -84,8 +113,8 @@ func (node *Node) BroadcastBlock(block *Block) {
     node.pubsub.Publish("blocks", data)
 }
 
-
-// func (node *Node) SendTransaction(tx *Transaction) string {
-//     mempool.transactions = append(mempool.transactions, tx)
-//     
-// }
+func (node *Node) SendTransaction(tx *Transaction) {
+    node.mempool.transactions = append(node.mempool.transactions, *tx)
+    data := tx.Serialize()
+    node.pubsub.Publish("transactions", data)
+}
