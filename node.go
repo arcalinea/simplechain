@@ -51,9 +51,12 @@ func CreateNewNode(ctx context.Context) (*Node){
         }
     }
         
+    blockchain := NewBlockchain(newNode)
+    
     node.p2pNode = newNode
     node.mempool = &Mempool{}
     node.pubsub = pubsub 
+    node.blockchain = blockchain
     
     node.ListenBlocks(ctx)
     node.ListenTransactions(ctx)

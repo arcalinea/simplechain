@@ -47,10 +47,14 @@ func takesBar(b **Block)  {
 }
 
 func TestMemory(t *testing.T) {
-    val := getString()
-    fmt.Println(string(val))
+    buf := make([]byte, 128)
+    for i := 0; i < 10; i++ {
+        getMessageFromNetwork(&buf)
+        fmt.Println(string(buf))
+    }
 }
 
-func getString() []byte {
-    return []byte("cats")
+func getMessageFromNetwork(buf *[]byte) {
+    n := copy(*buf, []byte("cats"))
+    *buf = (*buf)[:n]
 }
