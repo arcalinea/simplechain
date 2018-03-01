@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"time"
+	"fmt"
 
 	bserv "github.com/ipfs/go-ipfs/blockservice"
 	"github.com/ipfs/go-ipfs/exchange/bitswap"
@@ -120,23 +121,33 @@ func validateTransactions(txs []Transaction) bool {
 func (chain *Blockchain) ValidateBlock(blk *Block) bool {
 	chainTip := chain.GetChainTip()
 	if blk.PrevHash != chainTip.GetHash() {
+		fmt.Println("ValidateBlock() failed: hash invalid")
 		return false
 	}
     if !validateTransactions(blk.Transactions){
+		fmt.Println("ValidateBlock() failed: tx invalid")
         return false
     }
     if blk.Height != chainTip.Height + 1 {
+		fmt.Println("ValidateBlock() failed: height invalid")
         return false
     }
     if blk.Time < chainTip.Time {
+		fmt.Println("ValidateBlock() failed: time invalid")
         return false
     }
 	return true
 }
 
-func (chain *Blockchain) AddBlock(blk *Block) {
+func (chain *Blockchain) AddBlock(blk *Block) *cid.Cid {
 	if chain.ValidateBlock(blk) {
 		blkCopy := *blk
 		chain.Head = &blkCopy
+		cid, err := PutBlock(chain.ChainDB, &blkCopy)
+		if err != nil {
+			return nil
+		}
+		return cid
 	}
+	return nil
 }

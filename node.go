@@ -82,8 +82,10 @@ func (node *Node) ListenBlocks(ctx context.Context){
             if err != nil {
                 panic(err)
             }
+            fmt.Println("Block received over network:", blk)
             
-            fmt.Println(blk)
+            cid := node.blockchain.AddBlock(blk)
+            fmt.Println("Block added, cid:", cid)
         }
     }()
 }
