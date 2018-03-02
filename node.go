@@ -3,13 +3,14 @@ package main
 import (
     "context"
     "fmt"
+    "time"
+    "os"
     
     libp2p "gx/ipfs/QmNh1kGFFdsPu79KNSaL4NUKUPb4Eiz4KHdMtFY6664RDp/go-libp2p"
     host "gx/ipfs/QmNmJZL7FQySMtE2BQuLMuZg2EB2CLEunJJUSVSc9YnnbV/go-libp2p-host"
     ipfsaddr "gx/ipfs/QmQViVWBHbU6HmYjXcdNq7tVASCNgdg64ZGcauuDkLCivW/go-ipfs-addr"
     floodsub "gx/ipfs/QmSFihvoND3eDaAYRCeLgLPt62yCPgMZs1NSZmKFEtJQQw/go-libp2p-floodsub"
     peerstore "gx/ipfs/QmXauCuJzmzapetmC6W4TuDJLL1yFFrVzSHoWv8YdbmnxH/go-libp2p-peerstore"
-    "os"
 )
 
 type Node struct {
@@ -80,7 +81,7 @@ func (node *Node) ListenBlocks(ctx context.Context){
             if err != nil {
                 panic(err)
             }
-            fmt.Println("Block received over network:", blk)
+            fmt.Println("Block received over network:", string(blk.Serialize()))
             cid := node.blockchain.AddBlock(blk)
             fmt.Println("Block added, cid:", cid)
             node.mempool.removeTxs(blk.Transactions)
@@ -114,8 +115,7 @@ func (node *Node) CreateNewBlock() *Block {
     blk.PrevHash = node.blockchain.Head.GetHash()
     blk.Transactions = node.mempool.SelectTransactions()
     blk.Height = node.blockchain.Head.Height + 1
-    // TODO: Get actual timestamps
-    blk.Time = node.blockchain.Head.Time + 100
+    blk.Time = uint64(time.Now().Unix())
     return &blk
 }
 
