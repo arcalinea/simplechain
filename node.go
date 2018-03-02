@@ -54,7 +54,7 @@ func CreateNewNode(ctx context.Context) (*Node){
     blockchain := NewBlockchain(newNode)
     
     node.p2pNode = newNode
-    node.mempool = &Mempool{}
+    node.mempool = NewMempool()
     node.pubsub = pubsub 
     node.blockchain = blockchain
     
@@ -83,6 +83,7 @@ func (node *Node) ListenBlocks(ctx context.Context){
             fmt.Println("Block received over network:", blk)
             cid := node.blockchain.AddBlock(blk)
             fmt.Println("Block added, cid:", cid)
+            node.mempool.removeTxs(blk.Transactions)
         }
     }()
 }
@@ -124,7 +125,8 @@ func (node *Node) BroadcastBlock(block *Block) {
 }
 
 func (node *Node) SendTransaction(tx *Transaction) {
-    node.mempool.transactions = append(node.mempool.transactions, *tx)
+    txid := tx.GetTxid()
+    node.mempool.transactions[txid] = *tx
     data := tx.Serialize()
     node.pubsub.Publish("transactions", data)
 }

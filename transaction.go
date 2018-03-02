@@ -2,6 +2,7 @@ package main
 
 import (
     "encoding/json"
+    "crypto/sha256"
 )
 
 type Transaction struct {
@@ -26,4 +27,9 @@ func DeserializeTx(buf []byte) (*Transaction, error){
         return nil, err
     }
     return &tx, nil
+}
+
+func (tx *Transaction) GetTxid() ([32]byte){
+    ser := tx.Serialize() 
+    return sha256.Sum256(ser)
 }

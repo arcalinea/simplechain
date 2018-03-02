@@ -1,13 +1,31 @@
 package main 
 
 type Mempool struct {
-    transactions []Transaction
+    transactions map[[32]byte]Transaction
+}
+
+func NewMempool() *Mempool{
+    return &Mempool{
+        transactions: make(map[[32]byte]Transaction),
+    }
 }
 
 func (mempool *Mempool) AddTx(tx *Transaction) {
-    mempool.transactions = append(mempool.transactions, *tx)
+    txid := tx.GetTxid()
+    mempool.transactions[txid] = *tx
+}
+
+func (mempool *Mempool) removeTxs(txs []Transaction){
+    for _, tx := range txs {
+        txid := tx.GetTxid()
+        delete(mempool.transactions, txid)
+    }
 }
 
 func (mempool *Mempool) SelectTransactions() []Transaction {
-    return mempool.transactions
+    var txs []Transaction
+    for _, v := range mempool.transactions {
+        txs = append(txs, v)
+    }
+    return txs
 }

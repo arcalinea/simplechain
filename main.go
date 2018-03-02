@@ -7,11 +7,6 @@ import (
 	"net/http"
 )
 
-type RPC struct {
-	Method string
-	Params []string
-}
-
 func main() {
 	ctx := context.Background()
 	
