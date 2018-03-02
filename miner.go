@@ -8,19 +8,22 @@ import (
 
 func (node *Node) StartMiner(){
     c := make(chan string)
-    go Mine(c)
-    
+    go node.Mine(c)
+}
+
+func (node *Node) Mine(c chan string){
+    go FindSols(c)
     for {
         select{
         case sol:= <- c:
             fmt.Println(sol)
             blk := node.CreateNewBlock()
-        	node.BroadcastBlock(blk)
+            node.BroadcastBlock(blk)
         }
     }
 }
 
-func Mine(c chan string){
+func FindSols(c chan string){
     r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	for {
         rand := r.Intn(10)

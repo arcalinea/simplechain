@@ -2,9 +2,15 @@ package main
 
 import (
 	"context"
-	// "fmt"
-	// "net/http"
+	"fmt"
+	"strconv"
+	"net/http"
 )
+
+type RPC struct {
+	Method string
+	Params []string
+}
 
 func main() {
 	ctx := context.Background()
@@ -12,22 +18,31 @@ func main() {
 	node := CreateNewNode(ctx)
 	
 	node.StartMiner()
-	
-	var tx Transaction 
-	tx.Sender = "arc"
-	tx.Receiver = "why"
-	tx.Amount = 1
-	tx.Memo = "Hello world"
-	
-	node.SendTransaction(&tx)
 		
+	http.HandleFunc("/sendtx", func(w http.ResponseWriter, r *http.Request) {
+		from := r.FormValue("from")
+		to := r.FormValue("to")
+		amount := r.FormValue("amount")
+		memo := r.FormValue("memo")
+		
+		fmt.Println("call sendtx", from, to, amount, memo)
+		
+		amt, err := strconv.ParseInt(amount, 10, 64)
+		if err != nil {
+			panic(err)
+		}
 	
-	// http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-	// 	fmt.Println(r.URL)
-	// 	w.Write([]byte("hello"))
-	// })
-	// 
-	// 
-	// http.ListenAndServe(":1234", nil)
+		tx := Transaction{
+			Sender: from,
+			Receiver: to,
+			Amount: uint64(amt),
+			Memo: memo, 
+		}
+		
+		node.SendTransaction(&tx)
+	})
+	
+
+	http.ListenAndServe(":1234", nil)
 	
 }
