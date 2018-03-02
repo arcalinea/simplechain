@@ -70,20 +70,17 @@ func (node *Node) ListenBlocks(ctx context.Context){
     if err != nil {
         panic(err)
     }
-    
     go func(){
         for {
             msg, err := sub.Next(ctx)
             if err != nil {
                 panic(err)
             }
-            
             blk, err := DeserializeBlock(msg.GetData())
             if err != nil {
                 panic(err)
             }
             fmt.Println("Block received over network:", blk)
-            
             cid := node.blockchain.AddBlock(blk)
             fmt.Println("Block added, cid:", cid)
         }
@@ -95,7 +92,6 @@ func (node *Node) ListenTransactions(ctx context.Context){
     if err != nil {
         panic(err)
     }
-    
     go func(){
         for {
             msg, err := sub.Next(ctx)
