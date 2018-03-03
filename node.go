@@ -82,6 +82,7 @@ func (node *Node) ListenBlocks(ctx context.Context){
                 panic(err)
             }
             fmt.Println("Block received over network:", string(blk.Serialize()))
+            fmt.Println("Blockhash", blk.GetHashString())
             cid := node.blockchain.AddBlock(blk)
             fmt.Println("Block added, cid:", cid)
             node.mempool.removeTxs(blk.Transactions)

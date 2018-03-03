@@ -121,19 +121,19 @@ func validateTransactions(txs []Transaction) bool {
 func (chain *Blockchain) ValidateBlock(blk *Block) bool {
 	chainTip := chain.GetChainTip()
 	if blk.PrevHash != chainTip.GetHash() {
-		fmt.Println("ValidateBlock() failed: hash invalid")
+		fmt.Println("ValidateBlock() failed: PrevHash invalid")
 		return false
 	}
     if !validateTransactions(blk.Transactions){
-		fmt.Println("ValidateBlock() failed: tx invalid")
+		fmt.Println("ValidateBlock() failed: Contains invalid tx")
         return false
     }
     if blk.Height != chainTip.Height + 1 {
-		fmt.Println("ValidateBlock() failed: height invalid")
+		fmt.Println("ValidateBlock() failed: Height Invalid")
         return false
     }
     if blk.Time < chainTip.Time {
-		fmt.Println("ValidateBlock() failed: time invalid")
+		fmt.Println("ValidateBlock() failed: Time invalid")
         return false
     }
 	return true
