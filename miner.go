@@ -53,6 +53,7 @@ func (node *Node) FindSolsHash(c chan *Block){
         guess := sha256.Sum256(blk.Serialize())
         ticket := base64.StdEncoding.EncodeToString(guess[:])
         if isWinner(ticket) {
+            blk.Solution = ticket
             fmt.Println("Ticket:", ticket)
             c <- blk
         } 

@@ -131,3 +131,7 @@ func (node *Node) SendTransaction(tx *Transaction) {
     data := tx.Serialize()
     node.pubsub.Publish("transactions", data)
 }
+
+func (node *Node) GetInfo(){
+    return
+}

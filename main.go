@@ -37,6 +37,12 @@ func main() {
 		node.SendTransaction(&tx)
 	})
 	
+	http.HandleFunc("/getinfo", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("Call getinfo")
+		
+		node.GetInfo()
+	})
+	
 
 	http.ListenAndServe(":1234", nil)
 	

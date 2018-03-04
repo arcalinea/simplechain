@@ -12,7 +12,7 @@ type Block struct {
     Height uint64
     Time uint64
     Nonce []byte
-    // Solution string
+    Solution string
 }
 
 func (b *Block) Serialize() ([]byte){

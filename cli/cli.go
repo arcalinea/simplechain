@@ -10,7 +10,7 @@ import (
     "github.com/urfave/cli"
 )
 
-// sendtx you 100 -from=me -memo=ily
+// sendtx you 100 -from=me -memo=hi
 func SendTx(c *cli.Context) error {
     if len(c.Args()) != 2 {
         return fmt.Errorf("To and amount must be specified")
@@ -31,6 +31,10 @@ func SendTx(c *cli.Context) error {
         "from": from,
         "memo": memo,
     })
+}
+
+func GetInfo(c *cli.Context) error {
+    return Call("getinfo", map[string]string{})
 }
 
 func Call(cmd string, options map[string]string) error {
@@ -68,6 +72,11 @@ func main() {
             },
         },
         Action:  SendTx,
+      },
+      {
+        Name:   "getinfo",
+        Usage:  "get blockchain information",
+        Action: GetInfo,
       },
   }
 

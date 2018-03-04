@@ -1,11 +1,10 @@
 package main 
 
 import (
-    // "crypto/ecdsa"
     "math/rand"
 )
 
-
+// Returns mock pubkey as random string
 func (node *Node) pubkey() string{
     var letter = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
  
