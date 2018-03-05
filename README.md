@@ -6,11 +6,13 @@ Blocks currently save only to memory, and chain starts from scratch each time it
 
 ## P2P networking layer
 
-Starts a libp2p node. Sets up pubsub, subscribe to "blocks" and "transactions" topics.
+Starts a libp2p node. Sets up pubsub, subscribes to "blocks" and "transactions" topics.
 
 Connecting to another node is currently manual. Start with first address as argument.
 
-Todo: Bootstrapping and peer connection management.
+`./simplechain /ip4/127.0.0.1/tcp/42999/ipfs/QmdRa9h1mAxthj4ACrHULZC5yQmuiHzXDV56rWvnQaMA9o`
+
++ Todo: Bootstrapping and peer connection management.
 
 ## Block storage
 
@@ -18,24 +20,33 @@ Blocks are content-addressed and saved in memory through the IPFS data format.
 
 ## Mining 
 
-Mining is a proof-of-work algorithm that hashes a random nonce using sha256, seeking a target solution. Currently has no difficulty adjustment.
+Mining is a proof-of-work algorithm that hashes a random nonce using sha256, seeking a target solution. 
 
-`miner.go` also contains a function for a timeout-based mining algorithm, to be used to reduce load when testing, or when nodes are trusted.
++ TODO: difficulty adjustment, save block reward.
+
+`miner.go` also contains a function for a timeout-based mining algorithm.
 
 ## Block and transaction validation
 
 Each block received over network is processed, and saved if it is valid.
 
-# Wallet 
++ TODO: Reorg behavior
+
+## Wallet 
 
 Wallet and account behavior is a stub, currently only contains a function that returns an arbitrary random string as a "pubkey".
 
++ TODO: Key mgmt for accounts, set and track balances.
+
 ## RPC interface
 
-Starts up an http server, which can be interacted with through the command line.
+Starts up an http server, provides command line RPC interface. Cli must be built and run separately.
 
-Blockchain:
-`getinfo` - Takes no arguments, returns blockchain info.
+`go build -o simple-cli ./cli`
 
-Wallet:
-`sendtx` - Takes receiver address, amount, and optional values of sender address and a memo. `./cli sendtx you 100 -from=me -memo=hi`
+`./simple-cli getinfo`
+
+### Commands
+- `getinfo` - Takes no arguments, returns blockchain info.
+- `sendtx` - Takes receiver address, amount, and optional values of sender address and a memo. 
+    - `./cli sendtx you 100 -from=me -memo=hi`
