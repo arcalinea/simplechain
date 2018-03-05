@@ -11,6 +11,8 @@ import (
     ipfsaddr "gx/ipfs/QmQViVWBHbU6HmYjXcdNq7tVASCNgdg64ZGcauuDkLCivW/go-ipfs-addr"
     floodsub "gx/ipfs/QmSFihvoND3eDaAYRCeLgLPt62yCPgMZs1NSZmKFEtJQQw/go-libp2p-floodsub"
     peerstore "gx/ipfs/QmXauCuJzmzapetmC6W4TuDJLL1yFFrVzSHoWv8YdbmnxH/go-libp2p-peerstore"
+    
+    "./types"
 )
 
 type Node struct {
@@ -81,11 +83,13 @@ func (node *Node) ListenBlocks(ctx context.Context){
             if err != nil {
                 panic(err)
             }
-            fmt.Println("Block received over network:", string(blk.Serialize()))
-            fmt.Println("Blockhash", blk.GetHashString())
+            // fmt.Println("Block received over network:", string(blk.Serialize()))
+            fmt.Println("Block received over network, blockhash", blk.GetHashString())
             cid := node.blockchain.AddBlock(blk)
-            fmt.Println("Block added, cid:", cid)
-            node.mempool.removeTxs(blk.Transactions)
+            if cid != nil {
+                fmt.Println("Block added, cid:", cid)
+                node.mempool.removeTxs(blk.Transactions)
+            }
         }
     }()
 }
@@ -125,13 +129,18 @@ func (node *Node) BroadcastBlock(block *Block) {
     node.pubsub.Publish("blocks", data)
 }
 
-func (node *Node) SendTransaction(tx *Transaction) {
+func (node *Node) SendTransaction(tx *Transaction) *types.SendTxResponse {
+    var res types.SendTxResponse
     txid := tx.GetTxid()
     node.mempool.transactions[txid] = *tx
     data := tx.Serialize()
     node.pubsub.Publish("transactions", data)
+    res.Txid = tx.GetTxidString()
+    return &res
 }
 
-func (node *Node) GetInfo(){
-    return
+func (node *Node) GetInfo() *types.GetInfoResponse {
+    var res types.GetInfoResponse
+    res.BlockHeight = node.blockchain.Head.Height
+    return &res
 }

@@ -6,8 +6,11 @@ import (
     "os"
     "net/url"
     "net/http"
+    "encoding/json"
+    // "io/ioutil"
     
     "github.com/urfave/cli"
+    "../types"
 )
 
 // sendtx you 100 -from=me -memo=hi
@@ -25,28 +28,52 @@ func SendTx(c *cli.Context) error {
     }
     memo := c.String("memo")
     
-    return Call("sendtx", map[string]string{
+    var res types.SendTxResponse
+    err := Call("sendtx", map[string]string{
         "to": to, 
         "amount": amount,
         "from": from,
         "memo": memo,
-    })
+    }, &res)
+    
+    out, err := json.MarshalIndent(res, "","  ")
+    if err != nil {
+        return err
+    }
+    fmt.Println(string(out))
+    return nil
 }
 
 func GetInfo(c *cli.Context) error {
-    return Call("getinfo", map[string]string{})
+    var res types.GetInfoResponse
+    err := Call("getinfo", map[string]string{}, &res)
+    if err != nil {
+        return err
+    }
+    out, err := json.MarshalIndent(res, "","  ")
+    if err != nil {
+        return err
+    }
+    fmt.Println(string(out))
+    return nil
 }
 
-func Call(cmd string, options map[string]string) error {
+func Call(cmd string, options map[string]string, out interface{}) error {
     vals := make(url.Values)
     for k, v := range options {
         vals.Set(k, v)
     }
     resp, err := http.PostForm("http://127.0.0.1:1234/" + cmd, vals)
-    fmt.Println("Response:", resp)
+    //fmt.Println("Response:", resp)
     if err != nil {
         return err
     }
+    // buf, err := ioutil.ReadAll(resp.Body)
+    err = json.NewDecoder(resp.Body).Decode(out)
+    if err != nil {
+        return err
+    }
+    // fmt.Printl(string(buf))
     return nil
 }
 

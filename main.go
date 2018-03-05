@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"net/http"
+	"encoding/json"
 )
 
 func main() {
@@ -34,13 +35,21 @@ func main() {
 			Memo: memo, 
 		}
 		
-		node.SendTransaction(&tx)
+		err = json.NewEncoder(w).Encode(node.SendTransaction(&tx))
+		if err != nil {
+			panic(err)
+		}
 	})
 	
 	http.HandleFunc("/getinfo", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Call getinfo")
 		
-		node.GetInfo()
+		err := json.NewEncoder(w).Encode(node.GetInfo())
+		// res, err := json.Marshal(node.GetInfo())
+		if err != nil {
+			panic(err)
+		}
+		// fmt.Fprintf(w, string(res))
 	})
 	
 

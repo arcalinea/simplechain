@@ -39,6 +39,5 @@ func (b *Block) GetHash() ([32]byte){
 
 func (b *Block) GetHashString() string {
     hash := b.GetHash()
-    hashstr := hash[:]
-    return base64.StdEncoding.EncodeToString(hashstr)
+    return base64.StdEncoding.EncodeToString(hash[:])
 }

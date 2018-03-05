@@ -119,17 +119,17 @@ func validateTransactions(txs []Transaction) bool {
 // Height is 1 greater than chainTip
 // Time is greater than time of chainTip
 func (chain *Blockchain) ValidateBlock(blk *Block) bool {
-	chainTip := chain.GetChainTip()
+	chainTip := chain.Head
+	if blk.Height <= chainTip.Height {
+		// fmt.Println("ValidateBlock() failed: Height Invalid")
+		return false
+	}
 	if blk.PrevHash != chainTip.GetHash() {
 		fmt.Println("ValidateBlock() failed: PrevHash invalid")
 		return false
 	}
     if !validateTransactions(blk.Transactions){
 		fmt.Println("ValidateBlock() failed: Contains invalid tx")
-        return false
-    }
-    if blk.Height != chainTip.Height + 1 {
-		fmt.Println("ValidateBlock() failed: Height Invalid")
         return false
     }
     if blk.Time < chainTip.Time {
@@ -143,6 +143,7 @@ func (chain *Blockchain) AddBlock(blk *Block) *cid.Cid {
 	if chain.ValidateBlock(blk) {
 		blkCopy := *blk
 		chain.Head = &blkCopy
+		fmt.Println("Block accepted, chain head set to block:", string(blkCopy.Serialize()))
 		cid, err := PutBlock(chain.ChainDB, &blkCopy)
 		if err != nil {
 			return nil

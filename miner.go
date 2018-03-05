@@ -19,7 +19,6 @@ func (node *Node) Mine(c chan *Block){
     for {
         select{
         case blk := <- c:
-            fmt.Println(blk)
             node.BroadcastBlock(blk)
         }
     }
@@ -54,8 +53,10 @@ func (node *Node) FindSolsHash(c chan *Block){
         ticket := base64.StdEncoding.EncodeToString(guess[:])
         if isWinner(ticket) {
             blk.Solution = ticket
-            fmt.Println("Ticket:", ticket)
+            // fmt.Println("Ticket:", ticket)
             c <- blk
+            blk = node.CreateNewBlock()
+            blk.Nonce = make([]byte, 32)
         } 
     }
 }

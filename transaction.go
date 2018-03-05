@@ -2,6 +2,7 @@ package main
 
 import (
     "encoding/json"
+    "encoding/hex"
     "crypto/sha256"
 )
 
@@ -29,7 +30,12 @@ func DeserializeTx(buf []byte) (*Transaction, error){
     return &tx, nil
 }
 
-func (tx *Transaction) GetTxid() ([32]byte){
+func (tx *Transaction) GetTxid() ([32]byte) {
     ser := tx.Serialize() 
     return sha256.Sum256(ser)
+}
+
+func (tx *Transaction) GetTxidString() string {
+    txid := tx.GetTxid()
+    return hex.EncodeToString(txid[:])
 }
