@@ -104,13 +104,13 @@ func PutBlock(bs bserv.BlockService, blk *Block) (*cid.Cid, error) {
 	return nd.Cid(), nil
 }
 
-func getCid(blk *Block) (*cid.Cid, error) {
-	nd, err := cbor.WrapObject(blk, multihash.BLAKE2B_MIN+31, 32)
-	if err != nil {
-		return nil, err
-	}
-	return nd.Cid(), nil
-}
+// func getCid(blk *Block) (*cid.Cid, error) {
+// 	nd, err := cbor.WrapObject(blk, multihash.BLAKE2B_MIN+31, 32)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return nd.Cid(), nil
+// }
 
 //////
 
@@ -155,32 +155,29 @@ func (chain *Blockchain) ValidateBlock(blk *Block) bool {
 	return true
 }
 
-func (chain *Blockchain) reorg(oldBlock *Block, newBlock *Block) {
+func (chain *Blockchain) reorg(oldBlock *Block, newBlock *Block) ([]*Block, error){
+	fmt.Println("Attempting reorg...", newBlock)
 	var newChain []*Block 
 	
-	if oldBlock.GetHash() == newBlock.GetHash() {
+	if oldBlock.GetCid() == newBlock.GetCid() {
 		commonBlock := oldBlock
 		fmt.Println("Blockchain reorged back to block", commonBlock)
-		return
+		return newChain, nil
 	} else {
 		newChain = append(newChain, newBlock)
-		newBlockCid, err := getCid(newBlock)
+		// Get missing parent blocks by prevHash of newBlock
+		prevBlock, err := LoadBlock(chain.ChainDB, newBlock.PrevHash)
 		if err != nil {
-			panic(err)
+			fmt.Println("Fetching parent hashes of block failed -- aborting reorg:", err)
+			return nil, err
 		}
-		// Get missing parent blocks by prevhash of newBlock
-		prevBlock, err := LoadBlock(chain.ChainDB, newBlockCid)
-		if err != nil {
-			panic(err)
-		}
-		
-		chain.reorg(newBlock, prevBlock)
+		return chain.reorg(newBlock, prevBlock)
 	}
 }
 
 func (chain *Blockchain) AddBlock(blk *Block) *cid.Cid {
 	if chain.ValidateBlock(blk) {
-		if blk.PrevHash != chain.Head.GetHash() {
+		if blk.Height > chain.Head.Height+1 && blk.PrevHash != chain.Head.GetCid() {
 			// reorg if prevhash is not chaintip hash 
 			chain.reorg(chain.Head, blk) 
 		}
