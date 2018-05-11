@@ -13,7 +13,6 @@ var (
     PrevHash: head.GetHash(),
     Height: 1,
     }
-    
 )
 
 func TestValidateBlock(t *testing.T){

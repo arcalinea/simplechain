@@ -11,7 +11,7 @@ import (
 	"gx/ipfs/QmPpegoMqhAEqjncrzArm7KVWAkCm78rqL2DPuNjhPrshg/go-datastore"
 	bstore "gx/ipfs/QmTVDM4LCSUMFNQzbDLL9zQwp8usE6QHymFdh3h8vL9v6b/go-ipfs-blockstore"
 	nonerouting "gx/ipfs/QmZRcGYvxdauCd7hHnMYLYqcZRaDjv24c7eUNyJojAcdBb/go-ipfs-routing/none"
-	mh "gx/ipfs/QmZyZDi491cCNTLfAhwcaDii2Kg4pwKRkhqQzURGDvY6ua/go-multihash"
+	multihash "gx/ipfs/QmZyZDi491cCNTLfAhwcaDii2Kg4pwKRkhqQzURGDvY6ua/go-multihash"
 
 	cbor "gx/ipfs/QmRVSCwQtW1rjHCay9NqKXDwbtKTgDcN4iY7PrpSqfKM5D/go-ipld-cbor"
 	cid "gx/ipfs/QmcZfnkapfECQGcLZaf9B79NRg7cRa9EnZh4LSbkCzwNvY/go-cid"
@@ -82,7 +82,7 @@ func LoadBlock(bs bserv.BlockService, c *cid.Cid) (*Block, error) {
 }
 
 func PutBlock(bs bserv.BlockService, blk *Block) (*cid.Cid, error) {
-	nd, err := cbor.WrapObject(blk, mh.BLAKE2B_MIN+31, 32)
+	nd, err := cbor.WrapObject(blk, multihash.BLAKE2B_MIN+31, 32)
 	if err != nil {
 		return nil, err
 	}
@@ -91,6 +91,14 @@ func PutBlock(bs bserv.BlockService, blk *Block) (*cid.Cid, error) {
 		return nil, err
 	}
 
+	return nd.Cid(), nil
+}
+
+func getCid(blk *Block) (*cid.Cid, error) {
+	nd, err := cbor.WrapObject(blk, multihash.BLAKE2B_MIN+31, 32)
+	if err != nil {
+		return nil, err
+	}
 	return nd.Cid(), nil
 }
 
@@ -116,16 +124,11 @@ func validateTransactions(txs []Transaction) bool {
 
 // Check that prevHash of new block is equal to hash of chainTip
 // Transactions validate
-// Height is 1 greater than chainTip
 // Time is greater than time of chainTip
 func (chain *Blockchain) ValidateBlock(blk *Block) bool {
 	chainTip := chain.Head
 	if blk.Height <= chainTip.Height {
 		// fmt.Println("ValidateBlock() failed: Height Invalid")
-		return false
-	}
-	if blk.PrevHash != chainTip.GetHash() {
-		fmt.Println("ValidateBlock() failed: PrevHash invalid")
 		return false
 	}
     if !validateTransactions(blk.Transactions){
@@ -139,8 +142,35 @@ func (chain *Blockchain) ValidateBlock(blk *Block) bool {
 	return true
 }
 
+func (chain *Blockchain) reorg(oldBlock *Block, newBlock *Block) {
+	var newChain []*Block 
+	
+	if oldBlock.GetHash() == newBlock.GetHash() {
+		commonBlock := oldBlock
+		fmt.Println("Blockchain reorged back to block", commonBlock)
+		return
+	} else {
+		newChain = append(newChain, newBlock)
+		newBlockCid, err := getCid(newBlock)
+		if err != nil {
+			panic(err)
+		}
+		// Get missing parent blocks by prevhash of newBlock
+		prevBlock, err := LoadBlock(chain.ChainDB, newBlockCid)
+		if err != nil {
+			panic(err)
+		}
+		
+		chain.reorg(newBlock, prevBlock)
+	}
+}
+
 func (chain *Blockchain) AddBlock(blk *Block) *cid.Cid {
 	if chain.ValidateBlock(blk) {
+		if blk.PrevHash != chain.Head.GetHash() {
+			// reorg if prevhash is not chaintip hash 
+			chain.reorg(chain.Head, blk) 
+		}
 		blkCopy := *blk
 		chain.Head = &blkCopy
 		fmt.Println("Block accepted, chain head set to block:", string(blkCopy.Serialize()))
