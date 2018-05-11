@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"time"
 	"fmt"
+	"time"
 
 	bserv "github.com/ipfs/go-ipfs/blockservice"
 	"github.com/ipfs/go-ipfs/exchange/bitswap"
@@ -21,12 +21,18 @@ import (
 
 type Blockchain struct {
 	Head         *Block
-	ChainDB      bserv.BlockService
 	GenesisBlock *Block
-	Blockstore   bstore.Blockstore
+
+	// ChainDB is a block store that will fetch blocks from other connected nodes
+	ChainDB bserv.BlockService
+
+	// Blockstore is a block store that will only fetch data locally
+	Blockstore bstore.Blockstore
 }
 
 func init() {
+	// Register our types with the cbor encoder. This pregenerates serializers
+	// for these types.
 	cbor.RegisterCborType(Block{})
 	cbor.RegisterCborType(Transaction{})
 }
@@ -55,6 +61,10 @@ func NewBlockchain(h host.Host) *Blockchain {
 	bservice := bserv.New(blocks, bswap)
 
 	genesis := CreateGenesisBlock()
+
+	// make sure the genesis block is in our local blockstore
+	PutBlock(bservice, genesis)
+
 	return &Blockchain{
 		GenesisBlock: genesis,
 		Head:         genesis,
@@ -102,7 +112,6 @@ func getCid(blk *Block) (*cid.Cid, error) {
 	return nd.Cid(), nil
 }
 
-
 //////
 
 func CreateGenesisBlock() *Block {
@@ -118,8 +127,8 @@ func (chain *Blockchain) GetChainTip() *Block {
 }
 
 func validateTransactions(txs []Transaction) bool {
-    // TODO: Tx validation logic goes here
-    return true
+	// TODO: Tx validation logic goes here
+	return true
 }
 
 // Check that prevHash of new block is equal to hash of chainTip
@@ -131,14 +140,18 @@ func (chain *Blockchain) ValidateBlock(blk *Block) bool {
 		// fmt.Println("ValidateBlock() failed: Height Invalid")
 		return false
 	}
-    if !validateTransactions(blk.Transactions){
+	if !blk.PrevHash.Equals(chainTip.GetCid()) {
+		fmt.Println("ValidateBlock() failed: PrevHash invalid")
+		return false
+	}
+	if !validateTransactions(blk.Transactions) {
 		fmt.Println("ValidateBlock() failed: Contains invalid tx")
-        return false
-    }
-    if blk.Time < chainTip.Time {
+		return false
+	}
+	if blk.Time < chainTip.Time {
 		fmt.Println("ValidateBlock() failed: Time invalid")
-        return false
-    }
+		return false
+	}
 	return true
 }
 
@@ -181,4 +194,25 @@ func (chain *Blockchain) AddBlock(blk *Block) *cid.Cid {
 		return cid
 	}
 	return nil
+}
+
+func (chain *Blockchain) SyncChain(from *Block) error {
+	cur := from
+	for {
+		haveParent, err := chain.Blockstore.Has(cur.PrevHash)
+		if err != nil {
+			return err
+		}
+
+		if haveParent {
+			return nil
+		}
+
+		next, err := LoadBlock(chain.ChainDB, from.PrevHash)
+		if err != nil {
+			return err
+		}
+
+		cur = next
+	}
 }
