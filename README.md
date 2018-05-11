@@ -1,6 +1,6 @@
 # Simple blockchain 
 
-A simple blockchain written in Go, using libp2p and IPFS for the networking and block storage layers. 
+A simple blockchain written in Go, demonstrating use of libp2p and IPFS for networking and block storage layers. 
 
 Blocks currently save only to memory, and chain starts from scratch each time it's run. 
 
@@ -24,13 +24,13 @@ Mining is a proof-of-work algorithm that hashes a random nonce using sha256, see
 
 + TODO: difficulty adjustment, save block reward.
 
-`miner.go` also contains a function for a timeout-based mining algorithm.
+`miner.go` also contains a function for a timeout-based mining algorithm, to test without making your computer scream. 
 
 ## Block and transaction validation
 
 Each block received over network is processed, and saved if it is valid.
 
-+ TODO: Reorg behavior
+Reorg logic is naive, and based on longest chaintip. TODO: difficulty
 
 ## Wallet 
 
