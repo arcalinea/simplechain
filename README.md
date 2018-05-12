@@ -34,7 +34,7 @@ Reorg logic is naive, and based on longest chaintip. TODO: difficulty
 
 ## Wallet 
 
-Wallet and account behavior is a stub, currently only contains a function that returns an arbitrary random string as a "pubkey".
+Wallet and account behavior is a stub, currently only contains a function that returns an ecdsa keypair.
 
 + TODO: Key mgmt for accounts, set and track balances.
 

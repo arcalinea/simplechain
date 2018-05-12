@@ -104,13 +104,6 @@ func PutBlock(bs bserv.BlockService, blk *Block) (*cid.Cid, error) {
 	return nd.Cid(), nil
 }
 
-// func getCid(blk *Block) (*cid.Cid, error) {
-// 	nd, err := cbor.WrapObject(blk, multihash.BLAKE2B_MIN+31, 32)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return nd.Cid(), nil
-// }
 
 //////
 
@@ -137,7 +130,7 @@ func validateTransactions(txs []Transaction) bool {
 func (chain *Blockchain) ValidateBlock(blk *Block) bool {
 	chainTip := chain.Head
 	if blk.Height <= chainTip.Height {
-		// fmt.Println("ValidateBlock() failed: Height Invalid")
+		fmt.Println("ValidateBlock() failed: Height is less than chaintip")
 		return false
 	}
 	if !blk.PrevHash.Equals(chainTip.GetCid()) {
