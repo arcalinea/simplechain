@@ -10,7 +10,7 @@ var (
         Height: 0,
     }
     candidate = &Block {
-    PrevHash: head.GetHash(),
+    PrevHash: head.GetCid(),
     Height: 1,
     }
 )
