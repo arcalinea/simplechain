@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"time"
+	"errors"
 
 	libp2p "gx/ipfs/QmNh1kGFFdsPu79KNSaL4NUKUPb4Eiz4KHdMtFY6664RDp/go-libp2p"
 	host "gx/ipfs/QmNmJZL7FQySMtE2BQuLMuZg2EB2CLEunJJUSVSc9YnnbV/go-libp2p-host"
@@ -20,6 +21,7 @@ type Node struct {
 	mempool    *Mempool
 	blockchain *Blockchain
 	pubsub     *floodsub.PubSub
+	wallet	   *Wallet
 }
 
 func CreateNewNode(ctx context.Context) *Node {
@@ -60,6 +62,7 @@ func CreateNewNode(ctx context.Context) *Node {
 	node.mempool = NewMempool()
 	node.pubsub = pubsub
 	node.blockchain = blockchain
+	node.wallet = NewWallet()
 
 	node.ListenBlocks(ctx)
 	node.ListenTransactions(ctx)
@@ -129,14 +132,27 @@ func (node *Node) BroadcastBlock(block *Block) {
 	node.pubsub.Publish("blocks", data)
 }
 
-func (node *Node) SendTransaction(tx *Transaction) *types.SendTxResponse {
-	var res types.SendTxResponse
-	txid := tx.GetTxid()
-	node.mempool.transactions[txid] = *tx
-	data := tx.Serialize()
-	node.pubsub.Publish("transactions", data)
-	res.Txid = tx.GetTxidString()
+func (node *Node) GetNewAddress() *types.GetNewAddressResponse {
+	var res types.GetNewAddressResponse
+	addr := node.wallet.GetNewAddress()
+	res.Address = addr 
 	return &res
+}
+
+func (node *Node) SendTransaction(tx *Transaction) *types.SendTxResponse {	
+	// Check that node has key to send tx from address 
+	if node.wallet.hasKey(tx.Sender) {
+		var res types.SendTxResponse
+		txid := tx.GetTxid()
+		node.mempool.transactions[txid] = *tx
+		data := tx.Serialize()
+		node.pubsub.Publish("transactions", data)
+		res.Txid = tx.GetTxidString()
+		return &res
+	} else {
+		fmt.Println("Sending transaction failed")
+		panic(errors.New("Sending tx failed, no key present in wallet"))
+	}
 }
 
 func (node *Node) GetInfo() *types.GetInfoResponse {

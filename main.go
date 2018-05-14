@@ -52,7 +52,17 @@ func main() {
 		// fmt.Fprintf(w, string(res))
 	})
 	
-
+	http.HandleFunc("/getnewaddress", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("Call getnewaddress")
+		
+		err := json.NewEncoder(w).Encode(node.GetNewAddress())
+		// res, err := json.Marshal(node.GetInfo())
+		if err != nil {
+			panic(err)
+		}
+		// fmt.Fprintf(w, string(res))
+	})
+	
 	http.ListenAndServe(":1234", nil)
 	
 }

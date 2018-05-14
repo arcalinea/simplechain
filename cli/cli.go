@@ -44,6 +44,20 @@ func SendTx(c *cli.Context) error {
     return nil
 }
 
+func GetNewAddress(c *cli.Context) error {
+    var res types.GetNewAddressResponse
+    err := Call("getnewaddress", map[string]string{}, &res)
+    if err != nil {
+        return err
+    }
+    out, err := json.MarshalIndent(res, "","  ")
+    if err != nil {
+        return err
+    }
+    fmt.Println(string(out))
+    return nil
+}
+
 func GetInfo(c *cli.Context) error {
     var res types.GetInfoResponse
     err := Call("getinfo", map[string]string{}, &res)
@@ -99,6 +113,11 @@ func main() {
             },
         },
         Action:  SendTx,
+      },
+      {
+        Name:   "getnewaddress",
+        Usage:  "get new address",
+        Action: GetNewAddress,
       },
       {
         Name:   "getinfo",

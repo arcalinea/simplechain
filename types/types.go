@@ -7,3 +7,7 @@ type GetInfoResponse struct {
 type SendTxResponse struct {
     Txid       string
 }
+
+type GetNewAddressResponse struct {
+    Address     string
+}

@@ -8,13 +8,23 @@ import (
     "encoding/base64"
 )
 
+type Wallet struct {
+    // super insecure keydump, address:privkey
+    keyDump map[string]ecdsa.PrivateKey 
+}
+
+func NewWallet() *Wallet{
+    return &Wallet{
+        keyDump: make(map[string]ecdsa.PrivateKey),
+    }
+}
 
 func newKey() *ecdsa.PrivateKey {
-    key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+    privKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
     if err != nil {
         panic(err)
     }
-	return key
+	return privKey
 }
 
 func ToAddress(pubkey ecdsa.PublicKey) string {
@@ -22,4 +32,16 @@ func ToAddress(pubkey ecdsa.PublicKey) string {
     addr := sha256.Sum256(pubBytes[1:])
     addrString := base64.StdEncoding.EncodeToString(addr[:])[12:]
     return addrString
+}
+
+func (wallet *Wallet) GetNewAddress() string {
+    new := newKey()
+    addr := ToAddress(new.PublicKey)
+    wallet.keyDump[addr] = *new
+    return addr
+}
+
+func (wallet *Wallet) hasKey(addr string) bool {
+    _, ok := wallet.keyDump[addr]
+    return ok
 }
